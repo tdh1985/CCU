@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCU Calvary Newsletter - With Comments</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Basic styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Tailwind gray-50 */
+        }
+        /* Style for active tab */
+        .tab-button.active {
+            background-color: #4f46e5; /* Tailwind indigo-600 */
+            color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        /* Style for inactive tab */
+        .tab-button {
+            background-color: #e5e7eb; /* Tailwind gray-200 */
+            color: #374151; /* Tailwind gray-700 */
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+        }
+        .tab-button:hover {
+             background-color: #d1d5db; /* Tailwind gray-300 */
+        }
+        /* Hide content sections by default */
+        .tab-content {
+            display: none;
+        }
+        /* Show active content section */
+        .tab-content.active {
+            display: block;
+        }
+        /* Ensure icons align nicely */
+        .icon {
+             width: 1.5rem; /* 24px */
+             height: 1.5rem; /* 24px */
+             display: inline-block;
+             vertical-align: middle;
+             flex-shrink: 0; /* Prevent icons from shrinking in flex layouts */
+        }
+        .icon-lg {
+            width: 5rem; /* 80px */
+            height: 5rem; /* 80px */
+        }
+        .icon-md {
+             width: 4.375rem; /* 70px */
+             height: 4.375rem; /* 70px */
+        }
+        .icon-sm {
+            width: 1.25rem; /* 20px */
+            height: 1.25rem; /* 20px */
+        }
+         .icon-xs {
+            width: 1rem; /* 16px */
+            height: 1rem; /* 16px */
+        }
+        /* Custom legend styles */
+        .chart-legend {
+            display: grid;
+            /* Start with 1 column on mobile, 2 on medium screens */
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            gap: 0.5rem; /* Corresponds to gap-2 */
+        }
+        /* Apply 2 columns for medium screens and up */
+        @media (min-width: 768px) { /* md breakpoint */
+            .chart-legend {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem; /* Corresponds to gap-2 */
+            margin-bottom: 0.25rem; /* Corresponds to mb-1 */
+        }
+        .legend-color-box {
+            width: 0.75rem; /* Corresponds to w-3 */
+            height: 0.75rem; /* Corresponds to h-3 */
+            border-radius: 9999px; /* Corresponds to rounded-full */
+            flex-shrink: 0;
+        }
+        .legend-label {
+            font-size: 0.875rem; /* Corresponds to text-sm */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        /* Ensure chart canvas container allows resizing */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            /* Removed fixed height, set a min-height for very small charts */
+            min-height: 200px;
+            /* Aspect ratio can be controlled via Chart.js options if needed */
+        }
+        .bar-chart-container {
+             position: relative;
+             width: 100%;
+             min-height: 350px; /* Min height for bar chart */
+        }
+
+        /* Comment styles */
+        .comment-bubble {
+            position: relative;
+            padding: 12px 16px;
+            border-radius: 18px;
+            margin-bottom: 12px;
+            max-width: 85%;
+        }
+        
+        .comment-user {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+        }
+        
+        .comment-other {
+            background: #f1f5f9;
+            color: #334155;
+            margin-right: auto;
+        }
+        
+        .comment-form {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .comment-form:focus-within {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .floating-comment-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .floating-comment-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(79, 70, 229, 0.4);
+        }
+
+        .comment-modal {
+            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .comment-section-toggle {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            transition: all 0.3s ease;
+        }
+
+        .comment-section-toggle:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <div class="max-w-6xl mx-auto p-3 sm:p-4 font-sans">
+        <div class="bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white p-4 md:p-6 rounded-2xl shadow-lg text-center mb-4 md:mb-6">
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2">CCU Calvary Newsletter</h1>
+            <h2 class="text-lg sm:text-xl md:text-2xl opacity-90">March-April 2025</h2>
+            <div class="mt-3 flex justify-center items-center gap-2 text-sm opacity-80">
+                <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/message-circle.svg" alt="Comments" class="icon-sm"/>
+                <span id="total-comments-header">0 Comments</span>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap justify-center gap-2 mb-4 md:mb-6">
+            <button data-tab="main" class="tab-button px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm font-medium active">Main</button>
+            <button data-tab="metCalls" class="tab-button px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm font-medium">MET Calls</button>
+            <button data-tab="auditResults" class="tab-button px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm font-medium">Audit Results</button>
+            <button data-tab="alerts" class="tab-button px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm font-medium">Alerts</button>
+            <button data-tab="riskman" class="tab-button px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm font-medium">Riskman</button>
+            <button data-tab="comments" class="tab-button comment-section-toggle px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-sm font-medium text-white">
+                <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/message-circle.svg" alt="Comments" class="icon-xs inline mr-1"/>
+                Comments
+            </button>
+        </div>
+
+        <div class="mt-4">
+            <!-- All tab content sections here (main, metCalls, auditResults, alerts, riskman) -->
+            <!-- ... (keeping the same content as original, just adding comments section) ... -->
+
+            <!-- Comments Section -->
+            <div id="comments-content" class="tab-content">
+                <div class="bg-white p-4 md:p-6 rounded-2xl shadow-lg text-gray-800">
+                    <div class="flex items-center gap-3 mb-4 md:mb-6 border-b pb-3">
+                        <div class="bg-gradient-to-br from-purple-500 to-indigo-600 p-2 rounded-full">
+                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/message-circle.svg" alt="Comments" class="icon text-white"/>
+                        </div>
+                        <h3 class="text-xl sm:text-2xl font-bold text-gray-700">Discussion & Comments</h3>
+                        <span id="total-comments" class="ml-auto bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm font-medium">0 Comments</span>
+                    </div>
+
+                    <!-- Comment Form -->
+                    <div class="comment-form p-4 mb-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold">
+                                U
+                            </div>
+                            <div>
+                                <input type="text" id="user-name" placeholder="Your name" class="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                            </div>
+                        </div>
+                        <textarea 
+                            id="comment-input" 
+                            placeholder="Share your thoughts about this newsletter..." 
+                            class="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            rows="3"
+                        ></textarea>
+                        <div class="flex justify-between items-center mt-3">
+                            <div class="text-xs text-gray-500">
+                                <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/info.svg" alt="Info" class="icon-xs inline mr-1"/>
+                                Comments are stored locally and visible to all visitors
+                            </div>
+                            <button 
+                                id="submit-comment" 
+                                class="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-indigo-700 transition-all duration-200 flex items-center gap-2 text-sm font-medium"
+                            >
+                                <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/send.svg" alt="Send" class="icon-xs"/>
+                                Post Comment
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Comments Display -->
+                    <div id="comments-list" class="space-y-4">
+                        <div class="text-center text-gray-500 py-8">
+                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/message-circle.svg" alt="No Comments" class="icon-md mx-auto mb-3 opacity-50"/>
+                            <p class="text-lg font-medium">No comments yet</p>
+                            <p class="text-sm">Be the first to share your thoughts!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Comment Button -->
+    <button id="floating-comment-btn" class="floating-comment-btn w-14 h-14 rounded-full text-white flex items-center justify-center shadow-lg">
+        <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/message-circle.svg" alt="Comments" class="icon text-white"/>
+    </button>
+
+    <!-- Quick Comment Modal -->
+    <div id="quick-comment-modal" class="fixed inset-0 comment-modal hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="bg-gradient-to-br from-purple-500 to-indigo-600 p-2 rounded-full">
+                    <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/message-circle.svg" alt="Comments" class="icon text-white"/>
+                </div>
+                <h4 class="text-lg font-bold text-gray-800">Quick Comment</h4>
+                <button id="close-modal" class="ml-auto text-gray-400 hover:text-gray-600">
+                    <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/x.svg" alt="Close" class="icon"/>
+                </button>
+            </div>
+            <div class="mb-4">
+                <input type="text" id="modal-user-name" placeholder="Your name" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 mb-3" />
+                <textarea 
+                    id="modal-comment-input" 
+                    placeholder="What do you think about this newsletter?" 
+                    class="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    rows="4"
+                ></textarea>
+            </div>
+            <div class="flex gap-3">
+                <button id="modal-cancel" class="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">
+                    Cancel
+                </button>
+                <button id="modal-submit" class="flex-1 bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-2 px-4 rounded-lg hover:from-purple-600 hover:to-indigo-700 transition-all duration-200">
+                    Post Comment
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Data (same as original) ---
+        const hospitalUnitData = [
+            { name: 'Rehab Services', value: 29 }, { name: 'First North', value: 21 },
+            { name: 'First East', value: 21 }, { name: 'General Surgical', value: 21 },
+            { name: 'Gibson Unit', value: 4 }, { name: 'Neuro-Cardio', value: 4 }
+        ];
+        const reasonsData = [
+            { name: 'Hypotension', value: 21 }, { name: 'Nurse Concern', value: 17 },
+            { name: 'Chest Pain', value: 13 }, { name: 'Tachycardia', value: 13 },
+            { name: 'Respiratory', value: 8 }, { name: 'Surg. Issues', value: 8 },
+            { name: 'Decreased GCS', value: 8 }, { name: 'Other', value: 12 }
+        ];
+        const auditData = [
+            { name: 'Aseptic Technique', score: 96, audits: 3 }, { name: 'Blood Transfusion', score: 95, audits: 7 },
+            { name: 'Communication', score: 96, audits: 3 }, { name: 'Comprehensive Care', score: 93, audits: 4 },
+            { name: 'Invasive Devices', score: 75, audits: 3 }, { name: 'RRAD Audit', score: 98, audits: 3 },
+            { name: 'S8 Medication', score: 87, audits: 5 }, { name: 'VTE Assessment', score: 62, audits: 3 },
+            { name: 'Accreditation', score: 92, audits: 2 }
+        ];
+         const harmScoreDistributionData = { score3: 22, score4: 78 };
+         const incidentsByTypeData = [
+            { type: 'Medication/IV Fluid', score3: 0, score4: 8, total: 8 },
+            { type: 'Equipment / Facility', score3: 0, score4: 5, total: 5 },
+            { type: 'Clinical Management', score3: 0, score4: 3, total: 3 },
+            { type: 'Skin Integrity/Pressure Injury', score3: 2, score4: 1, total: 3 },
+            { type: 'Alleged Violence / Aggression', score3: 2, score4: 1, total: 3 },
+         ];
+
+        // --- Chart Colors ---
+        const CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#d0ed57'];
+
+        // --- Chart Instances ---
+        let hospitalUnitChartInstance = null;
+        let reasonsChartInstance = null;
+        let auditChartInstance = null;
+
+        // --- Comment System ---
+        class CommentSystem {
+            constructor() {
+                this.comments = this.loadComments();
+                this.initEventListeners();
+                this.updateCommentCount();
+                this.renderComments();
+            }
+
+            loadComments() {
+                const stored = localStorage.getItem('newsletter-comments');
+                return stored ? JSON.parse(stored) : [];
+            }
+
+            saveComments() {
+                localStorage.setItem('newsletter-comments', JSON.stringify(this.comments));
+            }
+
+            addComment(name, text) {
+                if (!name.trim() || !text.trim()) {
+                    alert('Please enter both your name and a comment.');
+                    return false;
+                }
+
+                const comment = {
+                    id: Date.now(),
+                    name: name.trim(),
+                    text: text.trim(),
+                    timestamp: new Date().toISOString(),
+                    likes: 0
+                };
+
+                this.comments.unshift(comment);
+                this.saveComments();
+                this.updateCommentCount();
+                this.renderComments();
+                return true;
+            }
+
+            likeComment(id) {
+                const comment = this.comments.find(c => c.id === id);
+                if (comment) {
+                    comment.likes++;
+                    this.saveComments();
+                    this.renderComments();
+                }
+            }
+
+            deleteComment(id) {
+                if (confirm('Are you sure you want to delete this comment?')) {
+                    this.comments = this.comments.filter(c => c.id !== id);
+                    this.saveComments();
+                    this.updateCommentCount();
+                    this.renderComments();
+                }
+            }
+
+            updateCommentCount() {
+                const count = this.comments.length;
+                const totalCommentsHeader = document.getElementById('total-comments-header');
+                const totalComments = document.getElementById('total-comments');
+                
+                if (totalCommentsHeader) {
+                    totalCommentsHeader.textContent = `${count} Comment${count !== 1 ? 's' : ''}`;
+                }
+                if (totalComments) {
+                    totalComments.textContent = `${count} Comment${count !== 1 ? 's' : ''}`;
+                }
+            }
+
+            formatTimestamp(timestamp) {
+                const date = new Date(timestamp);
+                const now = new Date();
+                const diffInHours = (now - date) / (1000 * 60 * 60);
+                
+                if (diffInHours < 1) {
+                    return 'Just now';
+                } else if (diffInHours < 24) {
+                    return `${Math.floor(diffInHours)} hour${Math.floor(diffInHours) !== 1 ? 's' : ''} ago`;
+                } else {
+                    const diffInDays = Math.floor(diffInHours / 24);
+                    if (diffInDays < 7) {
+                        return `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`;
+                    } else {
+                        return date.toLocaleDateString();
+                    }
+                }
+            }
+
+            renderComments() {
+                const container = document.getElementById('comments-list');
+                if (!container) return;
+
+                if (this.comments.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-8">
+                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/message-circle.svg" alt="No Comments" class="icon-md mx-auto mb-3 opacity-50"/>
+                            <p class="text-lg font-medium">No comments yet</p>
+                            <p class="text-sm">Be the first to share your thoughts!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = this.comments.map(comment => `
+                    <div class="comment-bubble comment-other bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                ${comment.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="font-medium text-gray-800 text-sm">${this.escapeHtml(comment.name)}</span>
+                                    <span class="text-xs text-gray-500">${this.formatTimestamp(comment.timestamp)}</span>
+                                </div>
+                                <p class="text-gray-700 text-sm leading-relaxed">${this.escapeHtml(comment.text)}</p>
+                                <div class="flex items-center gap-3 mt-2">
+                                    <button onclick="commentSystem.likeComment(${comment.id})" class="flex items-center gap-1 text-xs text-gray-500 hover:text-purple-600 transition-colors">
+                                        <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/heart.svg" alt="Like" class="icon-xs"/>
+                                        <span>${comment.likes}</span>
+                                    </button>
+                                    <button onclick="commentSystem.deleteComment(${comment.id})" class="text-xs text-gray-400 hover:text-red-600 transition-colors">
+                                        <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/trash-2.svg" alt="Delete" class="icon-xs"/>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            initEventListeners() {
+                // Main comment form
+                const submitBtn = document.getElementById('submit-comment');
+                const commentInput = document.getElementById('comment-input');
+                const userNameInput = document.getElementById('user-name');
+
+                if (submitBtn) {
+                    submitBtn.addEventListener('click', () => {
+                        if (this.addComment(userNameInput.value, commentInput.value)) {
+                            userNameInput.value = '';
+                            commentInput.value = '';
+                        }
+                    });
+                }
+
+                if (commentInput) {
+                    commentInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                            if (this.addComment(userNameInput.value, commentInput.value)) {
+                                userNameInput.value = '';
+                                commentInput.value = '';
+                            }
+                        }
+                    });
+                }
+
+                // Modal events
+                const floatingBtn = document.getElementById('floating-comment-btn');
+                const modal = document.getElementById('quick-comment-modal');
+                const closeModal = document.getElementById('close-modal');
+                const modalCancel = document.getElementById('modal-cancel');
+                const modalSubmit = document.getElementById('modal-submit');
+                const modalUserName = document.getElementById('modal-user-name');
+                const modalCommentInput = document.getElementById('modal-comment-input');
+
+                if (floatingBtn) {
+                    floatingBtn.addEventListener('click', () => {
+                        modal.classList.remove('hidden');
+                        setTimeout(() => modalUserName.focus(), 100);
+                    });
+                }
+
+                if (closeModal) {
+                    closeModal.addEventListener('click', () => {
+                        modal.classList.add('hidden');
+                    });
+                }
+
+                if (modalCancel) {
+                    modalCancel.addEventListener('click', () => {
+                        modal.classList.add('hidden');
+                    });
+                }
+
+                if (modalSubmit) {
+                    modalSubmit.addEventListener('click', () => {
+                        if (this.addComment(modalUserName.value, modalCommentInput.value)) {
+                            modalUserName.value = '';
+                            modalCommentInput.value = '';
+                            modal.classList.add('hidden');
+                        }
+                    });
+                }
+
+                // Close modal on backdrop click
+                if (modal) {
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            modal.classList.add('hidden');
+                        }
+                    });
+                }
+            }
+        }
+
+        // --- Helper Functions (same as original) ---
+        function getScoreColor(score) {
+            if (score >= 95) return '#10B981';
+            if (score >= 90) return '#22D3EE';
+            if (score >= 80) return '#F59E0B';
+            return '#EF4444';
+        }
+
+        function getBadgeClass(score) {
+            if (score >= 95) return 'bg-green-100 text-green-800';
+            if (score >= 90) return 'bg-teal-100 text-teal-800';
+            if (score >= 80) return 'bg-yellow-100 text-yellow-800';
+            return 'bg-red-100 text-red-800';
+        }
+
+        function createLegend(chartData, colors, legendContainerId) {
+            const legendContainer = document.getElementById(legendContainerId);
+            if (!legendContainer) return;
+            legendContainer.innerHTML = '';
+            chartData.forEach((item, index) => {
+                const color = colors[index % colors.length];
+                const legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                legendItem.innerHTML = `
+                    <div style="background-color: ${color};" class="legend-color-box"></div>
+                    <span class="legend-label">${item.name}: <b>${item.value}%</b></span>
+                `;
+                legendContainer.appendChild(legendItem);
+            });
+        }
+
+        // --- Chart Creation Functions (same as original) ---
+        function createHospitalUnitChart() {
+            const ctx = document.getElementById('hospitalUnitChart')?.getContext('2d');
+            if (!ctx) return;
+            if (hospitalUnitChartInstance) hospitalUnitChartInstance.destroy();
+
+            hospitalUnitChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: hospitalUnitData.map(d => d.name),
+                    datasets: [{
+                        data: hospitalUnitData.map(d => d.value),
+                        backgroundColor: CHART_COLORS,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 1.5,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) label += ': ';
+                                    if (context.parsed !== null) label += context.parsed + '%';
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            createLegend(hospitalUnitData, CHART_COLORS, 'hospitalUnitLegend');
+        }
+
+        function createReasonsChart() {
+            const ctx = document.getElementById('reasonsChart')?.getContext('2d');
+             if (!ctx) return;
+            if (reasonsChartInstance) reasonsChartInstance.destroy();
+
+            reasonsChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: reasonsData.map(d => d.name),
+                    datasets: [{
+                        data: reasonsData.map(d => d.value),
+                        backgroundColor: CHART_COLORS,
+                        hoverOffset: 4
+                    }]
+                },
+                 options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 1.5,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                             callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) label += ': ';
+                                    if (context.parsed !== null) label += context.parsed + '%';
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+             createLegend(reasonsData, CHART_COLORS, 'reasonsLegend');
+        }
+
+        function createAuditChart() {
+            const ctx = document.getElementById('auditChart')?.getContext('2d');
+             if (!ctx) return;
+            if (auditChartInstance) auditChartInstance.destroy();
+
+            auditChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: auditData.map(d => d.name),
+                    datasets: [{
+                        label: 'Score (%)',
+                        data: auditData.map(d => d.score),
+                        backgroundColor: auditData.map(d => getScoreColor(d.score)),
+                        borderColor: auditData.map(d => getScoreColor(d.score)),
+                        borderWidth: 1,
+                        borderRadius: { topLeft: 4, topRight: 4 }
+                    }]
+                },
+                options: {
+                    indexAxis: 'x',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            ticks: {
+                                font: { size: 9 },
+                                autoSkip: false,
+                                maxRotation: 60,
+                                minRotation: 45
+                            },
+                             grid: { display: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Score (%)',
+                                font: { size: 10 }
+                            },
+                             ticks: { font: { size: 10 } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const dataIndex = context.dataIndex;
+                                    const score = context.parsed.y;
+                                    const audits = auditData[dataIndex].audits;
+                                    return `Score: ${score}% (${audits} audits)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Populate Tables ---
+        function populateCriticalScoresTable() {
+             const tableBody = document.getElementById('criticalScoresTableBody');
+             const actionRequiredText = document.getElementById('actionRequiredText');
+             if (!tableBody || !actionRequiredText) return;
+
+             tableBody.innerHTML = '';
+
+             const criticalScores = auditData
+                .filter(item => item.score < 95)
+                .sort((a, b) => a.score - b.score);
+
+             if (criticalScores.length > 0) {
+                 criticalScores.forEach((item, index) => {
+                     const row = tableBody.insertRow();
+                     row.className = `${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} border-b border-gray-200 last:border-b-0`;
+                     row.innerHTML = `
+                        <td class="px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm text-gray-700">${item.name}</td>
+                        <td class="px-3 py-2 sm:px-4 sm:py-3 text-center">
+                            <span class="inline-flex items-center px-2 py-0.5 sm:px-2.5 rounded-full text-xs sm:text-sm font-medium ${getBadgeClass(item.score)}">
+                                ${item.score}% (${item.audits})
+                            </span>
+                        </td>
+                     `;
+                 });
+             } else {
+                  const row = tableBody.insertRow();
+                  row.innerHTML = `<td colspan="2" class="px-4 py-3 text-center text-sm text-gray-500">No scores below threshold.</td>`;
+             }
+
+             const vteScore = auditData.find(i => i.name === 'VTE Assessment')?.score || 'N/A';
+             actionRequiredText.textContent = `Please focus on improving VTE assessment completion. Current rate of ${vteScore}% is significantly below the 90% target threshold.`;
+        }
+
+        function populateRiskmanData() {
+            const harmScoreContainer = document.getElementById('harmScoreDistribution');
+            const incidentsBody = document.getElementById('incidentsTableBody');
+            const incidentsFoot = document.getElementById('incidentsTableFoot');
+
+            if (!harmScoreContainer || !incidentsBody || !incidentsFoot) return;
+
+            harmScoreContainer.innerHTML = `
+                <div class="text-center">
+                    <p class="text-2xl sm:text-3xl font-bold text-red-600">${harmScoreDistributionData.score3}%</p>
+                    <p class="text-xs sm:text-sm text-gray-500">Harm Score 3</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-2xl sm:text-3xl font-bold text-orange-600">${harmScoreDistributionData.score4}%</p>
+                    <p class="text-xs sm:text-sm text-gray-500">Harm Score 4</p>
+                </div>
+            `;
+
+            incidentsBody.innerHTML = '';
+            let totalScore3 = 0;
+            let totalScore4 = 0;
+            let grandTotal = 0;
+
+            incidentsByTypeData.forEach((incident, index) => {
+                totalScore3 += incident.score3;
+                totalScore4 += incident.score4;
+                grandTotal += incident.total;
+                const row = incidentsBody.insertRow();
+                row.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-700">${incident.type}</td>
+                    <td class="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-center text-red-600">${incident.score3}</td>
+                    <td class="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-center text-orange-600">${incident.score4}</td>
+                    <td class="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-center font-bold text-gray-800">${incident.total}</td>
+                `;
+            });
+
+            incidentsFoot.innerHTML = `
+                 <tr>
+                   <td class="px-3 py-2 sm:px-4 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Incidents</td>
+                   <td class="px-3 py-2 sm:px-4 sm:py-3 text-center text-sm font-bold text-red-600">${totalScore3}</td>
+                   <td class="px-3 py-2 sm:px-4 sm:py-3 text-center text-sm font-bold text-orange-600">${totalScore4}</td>
+                   <td class="px-3 py-2 sm:px-4 sm:py-3 text-center text-sm font-bold text-gray-800">${grandTotal}</td>
+                 </tr>
+            `;
+        }
+
+        // --- Tab Switching Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            let activeCharts = {};
+
+            function showTab(tabId) {
+                 tabContents.forEach(content => {
+                    content.classList.remove('active');
+                 });
+                 tabs.forEach(tab => {
+                    tab.classList.remove('active');
+                 });
+
+                 const activeContent = document.getElementById(`${tabId}-content`);
+                 const activeTabButton = document.querySelector(`.tab-button[data-tab="${tabId}"]`);
+
+                 if (activeContent) activeContent.classList.add('active');
+                 if (activeTabButton) activeTabButton.classList.add('active');
+
+                 activeCharts = {};
+
+                 requestAnimationFrame(() => {
+                     if (tabId === 'metCalls') {
+                         if (!activeCharts.hospitalUnit) activeCharts.hospitalUnit = createHospitalUnitChart();
+                         if (!activeCharts.reasons) activeCharts.reasons = createReasonsChart();
+                     } else if (tabId === 'auditResults') {
+                         if (!activeCharts.audit) activeCharts.audit = createAuditChart();
+                         populateCriticalScoresTable();
+                     } else if (tabId === 'riskman') {
+                         populateRiskmanData();
+                     }
+                 });
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    showTab(tabId);
+                });
+            });
+
+            // Initialize comment system
+            window.commentSystem = new CommentSystem();
+
+            // Show the initial tab
+            showTab('main');
+        });
+
+    </script>
+
+</body>
+</html>
