@@ -8,27 +8,597 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
     <style>
-        /* Basic styles */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc; /* Tailwind gray-50 */
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --accent-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --surface-color: rgba(255, 255, 255, 0.9);
+            --text-primary: #1a202c;
+            --text-secondary: #4a5568;
+            --blur-strength: 20px;
         }
-        /* Style for active tab */
-        .tab-button.active {
-            background-color: #4f46e5; /* Tailwind indigo-600 */
+
+        [data-theme="dark"] {
+            --glass-bg: rgba(0, 0, 0, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --surface-color: rgba(17, 24, 39, 0.8);
+            --text-primary: #f7fafc;
+            --text-secondary: #cbd5e0;
+        }
+
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 50%, #4a5568 100%);
+        }
+
+        [data-theme="dark"] .glass-morphism {
+            background: rgba(26, 32, 44, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] h1,
+        [data-theme="dark"] h2,
+        [data-theme="dark"] h3,
+        [data-theme="dark"] h4 {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] p,
+        [data-theme="dark"] span {
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .particle {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        [data-theme="dark"] .bg-white {
+            background: rgba(26, 32, 44, 0.8) !important;
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .text-gray-800,
+        [data-theme="dark"] .text-gray-700,
+        [data-theme="dark"] .text-gray-600 {
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] .text-gray-500 {
+            color: var(--text-secondary) !important;
+        }
+
+        [data-theme="dark"] .bg-gray-50,
+        [data-theme="dark"] .bg-gray-100 {
+            background: rgba(45, 55, 72, 0.6) !important;
+        }
+
+        [data-theme="dark"] .border-gray-200,
+        [data-theme="dark"] .border-gray-300 {
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        [data-theme="dark"] .bg-red-50 {
+            background: rgba(127, 29, 29, 0.3) !important;
+        }
+
+        [data-theme="dark"] .bg-yellow-50 {
+            background: rgba(120, 113, 16, 0.3) !important;
+        }
+
+        [data-theme="dark"] .bg-blue-50 {
+            background: rgba(30, 58, 138, 0.3) !important;
+        }
+
+        [data-theme="dark"] .text-red-700,
+        [data-theme="dark"] .text-red-800,
+        [data-theme="dark"] .text-yellow-700,
+        [data-theme="dark"] .text-yellow-800,
+        [data-theme="dark"] .text-blue-700,
+        [data-theme="dark"] .text-blue-800 {
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] body::before {
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(30, 58, 138, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(67, 56, 202, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(91, 33, 182, 0.3) 0%, transparent 50%);
+        }
+
+        [data-theme="dark"] .comment-form {
+            background: var(--glass-bg);
+            border-color: var(--glass-border);
+        }
+
+        [data-theme="dark"] input,
+        [data-theme="dark"] textarea {
+            background: rgba(45, 55, 72, 0.8) !important;
+            border-color: var(--glass-border) !important;
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] input::placeholder,
+        [data-theme="dark"] textarea::placeholder {
+            color: var(--text-secondary) !important;
+        }
+
+        /* Fullscreen text input modal */
+        .fullscreen-input-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .fullscreen-input-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .fullscreen-input-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 2px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9) translateY(30px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .fullscreen-input-modal.active .fullscreen-input-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .fullscreen-input-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .fullscreen-input-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .fullscreen-close-btn {
+            background: rgba(239, 68, 68, 0.2);
+            border: 2px solid rgba(239, 68, 68, 0.3);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-left: auto;
+        }
+
+        .fullscreen-close-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: scale(1.1);
+        }
+
+        .fullscreen-input {
+            width: 100%;
+            min-height: 200px;
+            max-height: 400px;
+            padding: 20px;
+            border: 2px solid var(--glass-border);
+            border-radius: 15px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        .fullscreen-input:focus {
+            outline: none;
+            border-color: rgba(102, 126, 234, 0.6);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+        }
+
+        .fullscreen-input-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .fullscreen-action-btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .fullscreen-save-btn {
+            background: var(--primary-gradient);
             color: white;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
         }
-        /* Style for inactive tab */
+
+        .fullscreen-save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .fullscreen-cancel-btn {
+            background: var(--glass-bg);
+            border: 2px solid var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        .fullscreen-cancel-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+
+        [data-theme="dark"] .fullscreen-input-container {
+            background: rgba(26, 32, 44, 0.9);
+        }
+
+        [data-theme="dark"] .fullscreen-input {
+            background: rgba(45, 55, 72, 0.8);
+        }
+
+        /* Fullscreen card modal */
+        .fullscreen-card-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 9998;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .fullscreen-card-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .fullscreen-card-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 900px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            transform: scale(0.8) translateY(50px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .fullscreen-card-modal.active .fullscreen-card-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .fullscreen-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--glass-border);
+        }
+
+        .fullscreen-card-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--primary-gradient);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
+        }
+
+        .fullscreen-card-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin: 0 0 10px 0;
+            line-height: 1.2;
+            font-variation-settings: 'wght' 700;
+        }
+
+        .fullscreen-card-subtitle {
+            font-size: 1.2rem;
+            color: #4a5568;
+            margin: 0 0 20px 0;
+            font-variation-settings: 'wght' 400;
+        }
+
+        .fullscreen-card-close {
+            background: rgba(239, 68, 68, 0.2);
+            border: 2px solid rgba(239, 68, 68, 0.3);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .fullscreen-card-close:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: scale(1.1) rotate(90deg);
+        }
+
+        .fullscreen-card-content {
+            font-size: 1.3rem;
+            line-height: 1.8;
+            color: #2d3748;
+            font-variation-settings: 'wght' 400;
+            margin-bottom: 30px;
+        }
+
+        .fullscreen-card-metadata {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            background: rgba(248, 250, 252, 0.8);
+            border-radius: 16px;
+            border: 1px solid rgba(226, 232, 240, 0.6);
+        }
+
+        .metadata-item {
+            text-align: center;
+        }
+
+        .metadata-label {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 5px;
+            font-variation-settings: 'wght' 500;
+        }
+
+        .metadata-value {
+            font-size: 1.1rem;
+            color: #1e293b;
+            font-variation-settings: 'wght' 600;
+        }
+
+        [data-theme="dark"] .fullscreen-card-container {
+            background: rgba(26, 32, 44, 0.95);
+        }
+
+        [data-theme="dark"] .fullscreen-card-title {
+            color: #f7fafc;
+        }
+
+        [data-theme="dark"] .fullscreen-card-subtitle {
+            color: #cbd5e0;
+        }
+
+        [data-theme="dark"] .fullscreen-card-content {
+            color: #e2e8f0;
+        }
+
+        [data-theme="dark"] .fullscreen-card-metadata {
+            background: rgba(45, 55, 72, 0.8);
+        }
+
+        [data-theme="dark"] .metadata-label {
+            color: #a0aec0;
+        }
+
+        [data-theme="dark"] .metadata-value {
+            color: #f7fafc;
+        }
+
+        /* Add cursor pointer to cards */
+        .card-clickable {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .card-clickable:hover {
+            transform: translateY(-8px) scale(1.02);
+        }
+
+        @media (max-width: 768px) {
+            .fullscreen-card-container {
+                padding: 25px;
+                max-height: 90vh;
+            }
+            
+            .fullscreen-card-title {
+                font-size: 2rem;
+            }
+            
+            .fullscreen-card-content {
+                font-size: 1.1rem;
+            }
+            
+            .fullscreen-card-icon {
+                width: 60px;
+                height: 60px;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        /* Basic styles with glassmorphism */
+        body {
+            font-family: 'Space Grotesk', 'Inter', sans-serif;
+            font-variation-settings: 'wght' 400;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            transition: background 0.6s ease;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+            animation: backgroundShift 20s ease-in-out infinite;
+        }
+
+        @keyframes backgroundShift {
+            0%, 100% { transform: translateX(0) translateY(0) scale(1); }
+            25% { transform: translateX(-10px) translateY(-5px) scale(1.02); }
+            50% { transform: translateX(10px) translateY(10px) scale(0.98); }
+            75% { transform: translateX(-5px) translateY(5px) scale(1.01); }
+        }
+
+        /* Particle system */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: particleFloat 15s linear infinite;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) translateX(0) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) translateX(50px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .glass-morphism {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--blur-strength));
+            -webkit-backdrop-filter: blur(var(--blur-strength));
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 45px var(--shadow-color);
+        }
+        /* Modern tab styling with glassmorphism */
         .tab-button {
-            background-color: #e5e7eb; /* Tailwind gray-200 */
-            color: #374151; /* Tailwind gray-700 */
-            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            transform: translateY(0);
         }
+
+        .tab-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .tab-button:hover::before {
+            left: 100%;
+        }
+
         .tab-button:hover {
-             background-color: #d1d5db; /* Tailwind gray-300 */
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px var(--shadow-color);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .tab-button.active {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+            transform: translateY(-3px);
+        }
+
+        .tab-button.active::before {
+            display: none;
         }
         /* Hide content sections by default */
         .tab-content {
@@ -107,77 +677,314 @@
              min-height: 350px; /* Min height for bar chart */
         }
 
-        /* Comment styles */
+        /* Modern comment styles with glassmorphism */
         .comment-bubble {
             position: relative;
-            padding: 12px 16px;
-            border-radius: 18px;
-            margin-bottom: 12px;
+            padding: 16px 20px;
+            border-radius: 24px;
+            margin-bottom: 16px;
             max-width: 85%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+
+        .comment-bubble:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px var(--shadow-color);
         }
         
         .comment-user {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--primary-gradient);
             color: white;
             margin-left: auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
         .comment-other {
-            background: #f1f5f9;
-            color: #334155;
+            background: var(--surface-color);
+            color: var(--text-primary);
             margin-right: auto;
         }
         
         .comment-form {
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            transition: all 0.3s ease;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 2px solid var(--glass-border);
+            border-radius: 20px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .comment-form::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
         
         .comment-form:focus-within {
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            border-color: rgba(102, 126, 234, 0.6);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), 0 15px 35px var(--shadow-color);
+            transform: translateY(-4px);
+        }
+
+        .comment-form:focus-within::before {
+            opacity: 1;
         }
 
         .floating-comment-btn {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 30px;
+            right: 30px;
             z-index: 1000;
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
-            transition: all 0.3s ease;
+            background: var(--primary-gradient);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
         }
         
         .floating-comment-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 35px rgba(79, 70, 229, 0.4);
+            transform: translateY(-6px) scale(1.1);
+            box-shadow: 0 20px 45px rgba(102, 126, 234, 0.5);
+            animation: none;
+        }
+
+        .floating-comment-btn:active {
+            transform: translateY(-2px) scale(1.05);
         }
 
         .comment-modal {
-            backdrop-filter: blur(10px);
-            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            background: rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .comment-modal > div {
+            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         .comment-section-toggle {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            transition: all 0.3s ease;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .comment-section-toggle::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s;
+        }
+
+        .comment-section-toggle:hover::before {
+            left: 100%;
         }
 
         .comment-section-toggle:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 30px rgba(16, 185, 129, 0.4);
         }
 
+        /* Dark mode toggle */
+        .dark-mode-toggle {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1001;
+            width: 60px;
+            height: 30px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 2px solid var(--glass-border);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 20px var(--shadow-color);
+        }
+
+        @media (max-width: 768px) {
+            .dark-mode-toggle {
+                top: 20px;
+                right: 15px;
+                width: 50px;
+                height: 25px;
+            }
+        }
+
+        .dark-mode-toggle::before {
+            content: '☀️';
+            position: absolute;
+            top: 50%;
+            left: 6px;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 8px var(--shadow-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        [data-theme="dark"] .dark-mode-toggle::before {
+            content: '🌙';
+            transform: translateY(-50%) translateX(26px);
+            background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);
+        }
+
+        @media (max-width: 768px) {
+            .dark-mode-toggle::before {
+                width: 15px;
+                height: 15px;
+                font-size: 8px;
+                left: 4px;
+            }
+            
+            [data-theme="dark"] .dark-mode-toggle::before {
+                transform: translateY(-50%) translateX(22px);
+            }
+        }
+
+        .dark-mode-toggle:hover {
+            box-shadow: 0 8px 20px var(--shadow-color);
+            transform: scale(1.05);
+        }
+
+        /* Enhanced card animations */
+        .card-3d {
+            transform-style: preserve-3d;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-3d:hover {
+            transform: translateY(-10px) rotateX(10deg) rotateY(5deg);
+        }
+
+        /* Floating animation keyframes */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-10px) rotate(1deg); }
+            66% { transform: translateY(5px) rotate(-1deg); }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .shimmer-effect {
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+
+        /* Interactive elements */
+        .interactive-element {
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .interactive-element:hover {
+            transform: translateY(-2px);
+        }
+
+        .interactive-element:active {
+            transform: translateY(0);
+        }
+
+        /* Smooth transitions for theme changes */
+        * {
+            transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+        }
+
+        /* Loading animation */
+        .loading-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50" data-theme="light">
+    
+    <!-- Dark Mode Toggle -->
+    <div class="dark-mode-toggle" id="darkModeToggle" title="Toggle Dark Mode"></div>
+    
+    <!-- Particle System -->
+    <div class="particles" id="particles"></div>
 
     <div class="max-w-6xl mx-auto p-3 sm:p-4 font-sans">
-        <div class="bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white p-4 md:p-6 rounded-2xl shadow-lg text-center mb-4 md:mb-6">
-            <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2">CCU Calvary Newsletter</h1>
-            <h2 class="text-lg sm:text-xl md:text-2xl opacity-90">June-July 2025</h2>
+        <div class="glass-morphism bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white p-4 md:p-6 rounded-3xl text-center mb-4 md:mb-6 card-3d interactive-element">
+            <div class="flex items-center justify-center gap-4 mb-4">
+                <svg class="calvarylogo" width="137" height="40" viewBox="0 0 137 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g>
+                        <path d="M36.3717 1.67761L2.84536 5.11723C2.84536 5.11723 2.51846 5.17408 2.26848 5.5531C2.01849 5.93212 2.07618 6.27324 2.07618 6.27324L5.44131 36.6328L37.6312 34.245L36.3717 1.67761Z" fill="#95C3E9"></path>
+                        <path d="M46.7627 20.2118C46.7627 15.2276 50.8008 11.0679 55.887 11.0679C58.9348 11.0679 61.5981 12.5081 63.2134 14.7444L60.454 16.7248C59.4348 15.3129 57.9253 14.4412 56.0216 14.4412C52.7622 14.4412 50.3874 17.0659 50.3874 20.2212C50.3874 23.3766 52.7334 26.0297 55.9928 26.0297C57.9253 26.0297 59.4348 25.158 60.454 23.7461L63.2134 25.7265C61.5981 27.9627 58.9349 29.403 55.887 29.403C50.8009 29.403 46.7627 25.2717 46.7627 20.2307" fill="currentColor"></path>
+                        <path d="M74.158 23.0924C74.158 21.2731 72.6677 19.9086 70.9755 19.9086C69.2834 19.9086 67.87 21.3489 67.87 23.0924C67.87 24.8359 69.1968 26.2477 70.9948 26.2477C72.7927 26.2477 74.1484 24.8075 74.1484 23.0924M74.2541 17.0849H77.6673V29.0809H74.2541V27.3564C73.4465 28.5882 71.8793 29.3841 70.2448 29.3841C66.8797 29.3841 64.3799 26.8163 64.3799 23.0924C64.3799 19.3685 66.8316 16.7722 70.3217 16.7722C71.8889 16.7722 73.4465 17.4355 74.2541 18.6768V17.0849Z" fill="currentColor"></path>
+                        <path d="M83.2423 10.5564H79.8291V29.081H83.2423V10.5564Z" fill="currentColor"></path>
+                        <path d="M94.0681 17.0848H97.7889L92.6547 29.0808H89.6069L84.4727 17.0848H88.1743L91.1452 24.7316L94.0681 17.0848Z" fill="currentColor"></path>
+                        <path d="M107.522 23.0924C107.522 21.2731 106.032 19.9086 104.34 19.9086C102.648 19.9086 101.234 21.3489 101.234 23.0924C101.234 24.8359 102.561 26.2477 104.359 26.2477C106.157 26.2477 107.513 24.8075 107.513 23.0924M107.618 17.0849H111.032V29.0809H107.618V27.3564C106.811 28.5882 105.244 29.3841 103.609 29.3841C100.244 29.3841 97.7441 26.8163 97.7441 23.0924C97.7441 19.3685 100.196 16.7722 103.686 16.7722C105.253 16.7722 106.811 17.4355 107.618 18.6768C107.618 18.6768 107.618 17.0849 107.618 17.0849Z" fill="currentColor"></path>
+                        <path d="M122.077 17.1607L121.299 20.3729C120.568 19.9844 119.972 19.937 119.549 19.937C117.799 19.937 116.607 21.5573 116.607 24.9685V29.0809H113.193V17.0849H116.578V19.6528C117.251 17.6534 118.635 16.7722 120.145 16.7722C120.799 16.7722 121.529 16.8764 122.077 17.1607Z" fill="currentColor"></path>
+                        <path d="M132.499 17.0848H136.172L128.672 34.9557H125.019L127.913 27.9438L123.086 17.0848H126.846L129.711 24.0209L132.499 17.0848Z" fill="currentColor"></path>
+                        <path d="M26.4997 18.6674H21.2694V35.3348H18.3561V18.6674H13.1738V16.2795V15.91H13.568H18.3561V10.7648H21.2694V15.91H26.4997V18.6674Z" class="calvarylogo__cross" fill="white"></path>
+                        <path d="M22.3228 7.82709C25.1879 6.92692 29.6587 7.49545 31.6105 10.9445C32.8989 13.2092 33.9469 16.6109 31.7932 21.1118C26.4859 32.2171 17.3231 35.3251 14.3522 37.2012C13.9292 37.4476 13.785 37.7318 13.8907 37.9971C13.9869 38.2246 14.2272 38.3951 14.6503 38.2909C14.708 38.2814 38.5331 32.5771 38.8215 15.2275C38.6388 10.4139 37.4562 8.22506 34.6007 5.94146C32.1489 3.98003 26.8993 3.50625 23.6977 5.31608C22.6497 5.95094 22.0055 6.5858 21.6882 7.21118C21.6401 7.30594 21.6113 7.46702 21.6786 7.60916C21.7555 7.78919 21.9478 7.93133 22.3132 7.83657L22.3228 7.82709Z" fill="currentColor"></path>
+                        <path d="M13.9114 3.88543C7.73882 0.815367 1.00856 3.96124 0.181707 9.29596C-1.79891 23.6514 13.0365 32.0277 14.3633 32.9089C14.7287 33.1269 15.1133 33.1648 15.3536 32.9468C15.5267 32.7858 15.6517 32.4825 15.4209 32.1604C11.9981 27.8301 4.43138 20.5718 5.50822 11.4753C5.97934 9.06853 7.00811 7.4577 8.93104 6.59543C10.2194 6.00795 13.0557 5.94162 16.0651 7.3819C16.5651 7.64721 17.0362 7.27766 16.8151 6.78493C16.8151 6.78493 16.1901 5.10777 13.9114 3.87595L13.9114 3.88543Z" fill="currentColor"></path>
+                    </g>
+                </svg>
+            </div>
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2" style="font-variation-settings: 'wght' 700; letter-spacing: -0.02em;">CCU Calvary Newsletter</h1>
+            <h2 class="text-lg sm:text-xl md:text-2xl opacity-90" style="font-variation-settings: 'wght' 300; letter-spacing: 0.01em;">June-July 2025</h2>
             <div class="mt-3 flex justify-center items-center gap-2 text-sm opacity-80">
                 <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/message-circle.svg" alt="Comments" class="icon-sm"/>
                 <span id="total-comments-header">0 Comments</span>
@@ -197,99 +1004,97 @@
         </div>        <div class="mt-4">
             <div id="main-content" class="tab-content active">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
-                    <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 p-4 md:p-6 rounded-2xl shadow-lg text-white transform transition-all hover:scale-105 hover:shadow-xl relative overflow-hidden">
+                    <div class="glass-morphism bg-gradient-to-br from-indigo-500 to-indigo-600 p-4 md:p-6 rounded-3xl text-white card-3d interactive-element relative overflow-hidden">
                         <div class="absolute right-4 bottom-4 md:right-5 md:bottom-5 opacity-20">
-                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/bed.svg" alt="Sleep" class="icon-lg"
+                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/award.svg" alt="Award" class="icon-lg"
+                                onerror="this.onerror=null; this.src='https://placehold.co/70x70/cccccc/ffffff?text=Error';"
+                            />
+                        </div>
+                        <div class="flex items-center gap-3 mb-3">
+                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/award.svg" alt="Award" class="icon"/>
+                            <h3 class="text-lg sm:text-xl font-bold" style="font-variation-settings: 'wght' 600;">Accreditation done and dusted!</h3>
+                        </div>
+                        <p class="relative z-10 text-sm md:text-base">The accreditation process has been successfully completed. Thank you to everyone who contributed to getting the statistics up, of course this is part of the usual process! To have no formal recommendations is outstanding.</p>
+                    </div>
+
+                    <div class="glass-morphism bg-gradient-to-br from-red-500 to-red-600 p-4 md:p-6 rounded-3xl text-white card-3d interactive-element relative overflow-hidden">
+                        <div class="absolute right-4 bottom-4 md:right-5 md:bottom-5 opacity-20">
+                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/pill.svg" alt="Medication" class="icon-lg"
                                 onerror="this.onerror=null; this.src='https://placehold.co/70x70/cccccc/ffffff?text=Error';"
                             />
                         </div>
                         <div class="flex items-center gap-3 mb-3">
                             <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/alert-triangle.svg" alt="Alert" class="icon"/>
-                            <h3 class="text-lg sm:text-xl font-bold">Accreditation done and dusted!</h3>
-                        </div>
-                        <p class="relative z-10 text-sm md:text-base">The accreditation process has been successfully completed. Thank you to everyone who contributed to getting the statistics up, of course this is part of the usual process! To have no formal recommendations is outstanding.</p>
-                    </div>
-
-                    <div class="bg-gradient-to-br from-red-500 to-red-600 p-4 md:p-6 rounded-2xl shadow-lg text-white transform transition-all hover:scale-105 hover:shadow-xl relative overflow-hidden">
-                        <div class="absolute right-4 bottom-4 md:right-5 md:bottom-5 opacity-20">
-                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/shield-alert.svg" alt="Safety" class="icon-lg"
-                                onerror="this.onerror=null; this.src='https://placehold.co/70x70/cccccc/ffffff?text=Error';"
-                            />
-                        </div>
-                        <div class="flex items-center gap-3 mb-3">
-                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/users.svg" alt="Team" class="icon"/>
-                            <h3 class="text-lg sm:text-xl font-bold">Rise in medication errors</h3>
+                            <h3 class="text-lg sm:text-xl font-bold" style="font-variation-settings: 'wght' 600;">Rise in medication errors</h3>
                         </div>
                         <p class="relative z-10 text-sm md:text-base">Whilst the last few months have been busy within the unit, we have seen a spike in medication related incidents. Please ensure that all medications are double-checked before administration and report any near misses immediately. A lot is just careless practice, such as medications not signed for by the prescriber etc. and we must all remain vigilant.</p>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-4 md:p-6 rounded-2xl shadow-lg text-white transform transition-all hover:scale-105 hover:shadow-xl relative overflow-hidden">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
+                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-4 md:p-6 rounded-2xl shadow-lg text-white transform transition-all hover:scale-105 hover:shadow-xl relative overflow-hidden">
                         <div class="absolute right-4 bottom-4 md:right-5 md:bottom-5 opacity-20">
-                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/syringe.svg" alt="Insulin Pen" class="icon-lg"
-                                onerror="this.onerror=null; this.src='https://placehold.co/70x70/cccccc/ffffff?text=Error';"
-                            />
-                        </div>                        <div class="flex items-center gap-3 mb-3">
-                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/pill.svg" alt="Medication" class="icon"/>
-                            <h3 class="text-lg sm:text-xl font-bold">Insulin Pens</h3>
-                        </div>                        <div class="mb-4">
-                            <img src="en3190797.jpg" alt="Insulin Pen Information" class="w-full h-48 object-contain rounded-lg border-2 border-white border-opacity-20" 
-                                onerror="this.onerror=null; this.src='https://placehold.co/400x192/4f46e5/ffffff?text=Insulin+Pen+Image';"
-                            />
-                        </div>
-                        <p class="relative z-10 text-sm md:text-base">The sliding scale forms have now been updated. Please ensure you are using the latest version. The insulin pens (as oppose to the standard vial where we would withdraw the amount needed) are single patient use devices and must not be shared between patients. It will follow the patient for their hospital journey.</p>
-                    </div>
-
-                    <div class="bg-gradient-to-br from-green-500 to-green-600 p-4 md:p-6 rounded-2xl shadow-lg text-white md:col-span-2 transform transition-all hover:scale-105 hover:shadow-xl relative overflow-hidden">
-                        <div class="absolute right-4 bottom-4 md:right-5 md:bottom-5 opacity-20">
-                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/award.svg" alt="Achievement" class="icon-lg"
+                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/calendar.svg" alt="Schedule" class="icon-lg"
                                 onerror="this.onerror=null; this.src='https://placehold.co/70x70/cccccc/ffffff?text=Error';"
                             />
                         </div>
                         <div class="flex items-center gap-3 mb-3">
-                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/star.svg" alt="Star" class="icon"/>
-                            <h3 class="text-lg sm:text-xl font-bold">Medication room</h3>
+                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/clock.svg" alt="Time" class="icon"/>
+                            <h3 class="text-lg sm:text-xl font-bold">Insulin Pens</h3>
+                        </div>
+                        <p class="relative z-10 text-sm md:text-base">The sliding scale forms have now been updated. Please ensure you are using the latest version. The insulin pens (as oppose to the standard vial where we would withdraw the amount needed) are single patient use devices and must not be shared between patients. It will follow the patient for their hospital journey.</p>
+                    </div>
+
+                    <div class="glass-morphism bg-gradient-to-br from-green-500 to-green-600 p-4 md:p-6 rounded-3xl text-white md:col-span-2 card-3d interactive-element relative overflow-hidden">
+                        <div class="absolute right-4 bottom-4 md:right-5 md:bottom-5 opacity-20">
+                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/door-open.svg" alt="Room" class="icon-lg"
+                                onerror="this.onerror=null; this.src='https://placehold.co/70x70/cccccc/ffffff?text=Error';"
+                            />
+                        </div>
+                        <div class="flex items-center gap-3 mb-3">
+                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/door-open.svg" alt="Room" class="icon"/>
+                            <h3 class="text-lg sm:text-xl font-bold" style="font-variation-settings: 'wght' 600;">Medication room</h3>
                         </div>
                         <p class="relative z-10 text-sm md:text-base">Finally we have an updated medication room complete with a sliding door. At least the major works are done and dusted. Everyone should have swipe access now to the new space. Over the coming weeks more will be added to the room with the oral medications etc transferring there.</p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                     <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 p-4 md:p-6 rounded-2xl shadow-lg text-white transform transition-all hover:scale-105 hover:shadow-xl relative overflow-hidden">
+                     <div class="glass-morphism bg-gradient-to-br from-yellow-500 to-yellow-600 p-4 md:p-6 rounded-3xl text-white card-3d interactive-element relative overflow-hidden">
                         <div class="absolute right-4 bottom-4 md:right-5 md:bottom-5 opacity-20">
-                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/heart-handshake.svg" alt="Care" class="icon-lg"
+                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/thumbs-up.svg" alt="Feedback" class="icon-lg"
                                 onerror="this.onerror=null; this.src='https://placehold.co/70x70/cccccc/ffffff?text=Error';"
                             />
                         </div>
                         <div class="flex items-center gap-3 mb-3">
-                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/heart.svg" alt="Heart" class="icon"/>
-                            <h3 class="text-lg sm:text-xl font-bold">Patient Feedback</h3>
+                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/thumbs-up.svg" alt="Feedback" class="icon"/>
+                            <h3 class="text-lg sm:text-xl font-bold" style="font-variation-settings: 'wght' 600;">Patient Feedback</h3>
                         </div>
                         <p class="relative z-10 text-sm md:text-base">Recent patient surveys show high satisfaction rates with our care quality. Keep up the excellent work!</p>
                     </div>
 
-                    <div class="bg-gradient-to-br from-purple-500 to-purple-600 p-4 md:p-6 rounded-2xl shadow-lg text-white transform transition-all hover:scale-105 hover:shadow-xl relative overflow-hidden">
+                    <div class="glass-morphism bg-gradient-to-br from-purple-500 to-purple-600 p-4 md:p-6 rounded-3xl text-white card-3d interactive-element relative overflow-hidden">
                         <div class="absolute right-4 bottom-4 md:right-5 md:bottom-5 opacity-20">
-                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/book-open.svg" alt="Education" class="icon-lg"
+                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/graduation-cap.svg" alt="Education" class="icon-lg"
                                 onerror="this.onerror=null; this.src='https://placehold.co/70x70/cccccc/ffffff?text=Error';"
                             />
                         </div>
                         <div class="flex items-center gap-3 mb-3">
-                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/graduation-cap.svg" alt="Education" class="icon"/>
-                            <h3 class="text-lg sm:text-xl font-bold">Continuing Education</h3>
+                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/book-open.svg" alt="Learning" class="icon"/>
+                            <h3 class="text-lg sm:text-xl font-bold" style="font-variation-settings: 'wght' 600;">Continuing Education</h3>
                         </div>
                         <p class="relative z-10 text-sm md:text-base">New online learning modules are available. Complete them by month-end for CE credits.</p>
                     </div>
 
-                    <div class="bg-gradient-to-br from-pink-500 to-pink-600 p-4 md:p-6 rounded-2xl shadow-lg text-white transform transition-all hover:scale-105 hover:shadow-xl relative overflow-hidden">
+                    <div class="glass-morphism bg-gradient-to-br from-pink-500 to-pink-600 p-4 md:p-6 rounded-3xl text-white card-3d interactive-element relative overflow-hidden">
                         <div class="absolute right-4 bottom-4 md:right-5 md:bottom-5 opacity-20">
-                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/coffee.svg" alt="Break" class="icon-lg"
+                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/heart.svg" alt="Wellness" class="icon-lg"
                                 onerror="this.onerror=null; this.src='https://placehold.co/70x70/cccccc/ffffff?text=Error';"
                             />
                         </div>
                         <div class="flex items-center gap-3 mb-3">
-                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/smile.svg" alt="Wellness" class="icon"/>
-                            <h3 class="text-lg sm:text-xl font-bold">Staff Wellness</h3>
+                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/heart.svg" alt="Wellness" class="icon"/>
+                            <h3 class="text-lg sm:text-xl font-bold" style="font-variation-settings: 'wght' 600;">Staff Wellness</h3>
                         </div>
                         <p class="relative z-10 text-sm md:text-base">New break room amenities installed! Enjoy the upgraded facilities during your rest periods.</p>
                     </div>
@@ -298,12 +1103,12 @@
 
             <div id="metCalls-content" class="tab-content">
                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                    <div class="bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 p-4 md:p-6 rounded-2xl shadow-lg text-white transform transition-all hover:scale-105 hover:shadow-xl">
+                    <div class="glass-morphism bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 p-4 md:p-6 rounded-3xl text-white card-3d interactive-element">
                         <div class="flex items-center gap-3 mb-4 md:mb-6">
                             <div class="bg-white bg-opacity-20 p-2 rounded-full">
                                 <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/activity.svg" alt="Activity" class="icon text-white"/>
                             </div>
-                            <h3 class="text-lg sm:text-xl md:text-2xl font-bold">MET Calls by Hospital Unit</h3>
+                            <h3 class="text-lg sm:text-xl md:text-2xl font-bold" style="font-variation-settings: 'wght' 600;">MET Calls by Hospital Unit</h3>
                         </div>
                         <div class="chart-container">
                             <canvas id="hospitalUnitChart"></canvas>
@@ -311,12 +1116,12 @@
                         <div id="hospitalUnitLegend" class="chart-legend mt-4"></div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-green-500 via-green-600 to-green-700 p-4 md:p-6 rounded-2xl shadow-lg text-white transform transition-all hover:scale-105 hover:shadow-xl">
+                    <div class="glass-morphism bg-gradient-to-br from-green-500 via-green-600 to-green-700 p-4 md:p-6 rounded-3xl text-white card-3d interactive-element">
                         <div class="flex items-center gap-3 mb-4 md:mb-6">
                             <div class="bg-white bg-opacity-20 p-2 rounded-full">
                                 <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/pie-chart.svg" alt="Chart" class="icon text-white"/>
                             </div>
-                            <h3 class="text-lg sm:text-xl md:text-2xl font-bold">MET Call Reasons</h3>
+                            <h3 class="text-lg sm:text-xl md:text-2xl font-bold" style="font-variation-settings: 'wght' 600;">MET Call Reasons</h3>
                         </div>
                         <div class="chart-container">
                             <canvas id="reasonsChart"></canvas>
@@ -324,12 +1129,12 @@
                         <div id="reasonsLegend" class="chart-legend mt-4"></div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-indigo-500 via-indigo-600 to-indigo-700 p-4 md:p-6 rounded-2xl shadow-lg text-white md:col-span-2 transform transition-all hover:scale-105 hover:shadow-xl">
+                    <div class="glass-morphism bg-gradient-to-br from-indigo-500 via-indigo-600 to-indigo-700 p-4 md:p-6 rounded-3xl text-white md:col-span-2 card-3d interactive-element">
                         <div class="flex items-center gap-3 mb-4 md:mb-6">
                             <div class="bg-white bg-opacity-20 p-2 rounded-full">
                                 <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/trending-up.svg" alt="Trending" class="icon text-white"/>
                             </div>
-                            <h3 class="text-lg sm:text-xl md:text-2xl font-bold">MET Call Summary & Trends</h3>
+                            <h3 class="text-lg sm:text-xl md:text-2xl font-bold" style="font-variation-settings: 'wght' 600;">MET Call Summary & Trends</h3>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                             <div class="bg-white bg-opacity-10 p-3 md:p-4 rounded-lg backdrop-blur-sm">
@@ -355,24 +1160,24 @@
 
             <div id="auditResults-content" class="tab-content">
                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                    <div class="bg-gradient-to-br from-teal-500 via-teal-600 to-teal-700 p-4 md:p-6 rounded-2xl shadow-lg text-white md:col-span-2 transform transition-all hover:shadow-xl">
+                    <div class="glass-morphism bg-gradient-to-br from-teal-500 via-teal-600 to-teal-700 p-4 md:p-6 rounded-3xl text-white md:col-span-2 card-3d interactive-element">
                         <div class="flex items-center gap-3 mb-4 md:mb-6">
                             <div class="bg-white bg-opacity-20 p-2 rounded-full">
                                 <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/bar-chart-3.svg" alt="Bar Chart" class="icon text-white"/>
                             </div>
-                            <h3 class="text-lg sm:text-xl md:text-2xl font-bold">Audit Scores by Category</h3>
+                            <h3 class="text-lg sm:text-xl md:text-2xl font-bold" style="font-variation-settings: 'wght' 600;">Audit Scores by Category</h3>
                         </div>
                         <div class="bar-chart-container">
                             <canvas id="auditChart"></canvas>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 p-4 md:p-6 rounded-2xl shadow-lg text-white transform transition-all hover:shadow-xl">
+                    <div class="glass-morphism bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 p-4 md:p-6 rounded-3xl text-white card-3d interactive-element">
                         <div class="flex items-center gap-3 mb-4 md:mb-6">
                             <div class="bg-white bg-opacity-20 p-2 rounded-full">
                                 <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/alert-circle.svg" alt="Alert" class="icon text-white"/>
                             </div>
-                            <h3 class="text-lg sm:text-xl md:text-2xl font-bold">Action Required</h3>
+                            <h3 class="text-lg sm:text-xl md:text-2xl font-bold" style="font-variation-settings: 'wght' 600;">Action Required</h3>
                         </div>
 
                         <div class="mb-4 md:mb-6">
@@ -406,12 +1211,12 @@
             </div>
 
             <div id="alerts-content" class="tab-content">
-                 <div class="bg-white p-4 md:p-6 rounded-2xl shadow-lg text-gray-800">
+                 <div class="glass-morphism bg-white p-4 md:p-6 rounded-3xl text-gray-800">
                     <div class="flex items-center gap-3 mb-4 md:mb-6 border-b pb-3">
                         <div class="bg-gradient-to-br from-red-500 to-red-600 p-2 rounded-full">
                             <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/bell.svg" alt="Alerts" class="icon text-white"/>
                         </div>
-                        <h3 class="text-xl sm:text-2xl font-bold text-gray-700">System Alerts & Notifications</h3>
+                        <h3 class="text-xl sm:text-2xl font-bold text-gray-700" style="font-variation-settings: 'wght' 600;">System Alerts & Notifications</h3>
                         <span class="ml-auto bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">3 Active</span>
                     </div>
 
@@ -499,12 +1304,12 @@
             </div>
 
             <div id="riskman-content" class="tab-content">
-                 <div class="bg-white p-4 md:p-6 rounded-2xl shadow-lg text-gray-800">
+                 <div class="glass-morphism bg-white p-4 md:p-6 rounded-3xl text-gray-800">
                     <div class="flex items-center gap-3 mb-4 md:mb-6 border-b pb-3">
                         <div class="bg-gradient-to-br from-orange-500 to-red-600 p-2 rounded-full">
                             <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/shield-alert.svg" alt="Risk" class="icon text-white"/>
                         </div>
-                        <h3 class="text-xl sm:text-2xl font-bold text-gray-700">Risk Management Dashboard</h3>
+                        <h3 class="text-xl sm:text-2xl font-bold text-gray-700" style="font-variation-settings: 'wght' 600;">Risk Management Dashboard</h3>
                         <span class="ml-auto bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">22 Incidents</span>
                     </div>
 
@@ -546,7 +1351,7 @@
                         <div class="bg-gradient-to-br from-purple-500 to-indigo-600 p-2 rounded-full">
                             <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/message-circle.svg" alt="Comments" class="icon text-white"/>
                         </div>
-                        <h3 class="text-xl sm:text-2xl font-bold text-gray-700">Discussion & Comments</h3>
+                        <h3 class="text-xl sm:text-2xl font-bold text-gray-700" style="font-variation-settings: 'wght' 600;">Discussion & Comments</h3>
                         <span id="total-comments" class="ml-auto bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm font-medium">0 Comments</span>
                     </div>
 
@@ -1127,6 +1932,497 @@
             `;
         }
 
+        // --- Dark Mode Toggle ---
+        class DarkModeToggle {
+            constructor() {
+                this.darkMode = localStorage.getItem('darkMode') === 'true';
+                this.toggle = document.getElementById('darkModeToggle');
+                this.init();
+            }
+
+            init() {
+                this.updateTheme();
+                if (this.toggle) {
+                    this.toggle.addEventListener('click', () => this.toggleDarkMode());
+                }
+            }
+
+            toggleDarkMode() {
+                this.darkMode = !this.darkMode;
+                localStorage.setItem('darkMode', this.darkMode);
+                this.updateTheme();
+            }
+
+            updateTheme() {
+                document.body.setAttribute('data-theme', this.darkMode ? 'dark' : 'light');
+                
+                // Add smooth transition for theme change
+                document.body.style.transition = 'all 0.4s ease';
+                setTimeout(() => {
+                    document.body.style.transition = '';
+                }, 400);
+            }
+        }
+
+        // --- Particle System ---
+        class ParticleSystem {
+            constructor() {
+                this.container = document.getElementById('particles');
+                this.particles = [];
+                this.maxParticles = 50;
+                this.init();
+            }
+
+            init() {
+                this.createParticles();
+                setInterval(() => this.updateParticles(), 100);
+            }
+
+            createParticles() {
+                for (let i = 0; i < this.maxParticles; i++) {
+                    setTimeout(() => this.addParticle(), i * 300);
+                }
+            }
+
+            addParticle() {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                const startX = Math.random() * window.innerWidth;
+                const animationDuration = 10 + Math.random() * 10;
+                const delay = Math.random() * 5;
+                const size = 2 + Math.random() * 3;
+                const opacity = 0.2 + Math.random() * 0.3;
+                
+                particle.style.cssText = `
+                    left: ${startX}px;
+                    width: ${size}px;
+                    height: ${size}px;
+                    animation-duration: ${animationDuration}s;
+                    animation-delay: ${delay}s;
+                    opacity: ${opacity};
+                `;
+                
+                this.container.appendChild(particle);
+                
+                setTimeout(() => {
+                    if (particle.parentNode) {
+                        particle.remove();
+                    }
+                }, (animationDuration + delay) * 1000);
+            }
+
+            updateParticles() {
+                if (this.container.children.length < this.maxParticles) {
+                    this.addParticle();
+                }
+            }
+        }
+
+        // --- Fullscreen Card System ---
+        class FullscreenCardSystem {
+            constructor() {
+                this.modal = null;
+                this.init();
+            }
+
+            init() {
+                this.createModal();
+                this.bindEvents();
+            }
+
+            createModal() {
+                this.modal = document.createElement('div');
+                this.modal.className = 'fullscreen-card-modal';
+                this.modal.innerHTML = `
+                    <div class="fullscreen-card-container">
+                        <div class="fullscreen-card-header">
+                            <div>
+                                <div class="fullscreen-card-icon" id="fullscreen-card-icon"></div>
+                                <h2 class="fullscreen-card-title" id="fullscreen-card-title"></h2>
+                                <p class="fullscreen-card-subtitle" id="fullscreen-card-subtitle"></p>
+                            </div>
+                            <button class="fullscreen-card-close" id="fullscreen-card-close">
+                                <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/x.svg" alt="Close" style="width: 24px; height: 24px; filter: invert(1);" />
+                            </button>
+                        </div>
+                        <div class="fullscreen-card-content" id="fullscreen-card-content"></div>
+                        <div class="fullscreen-card-metadata" id="fullscreen-card-metadata"></div>
+                    </div>
+                `;
+                document.body.appendChild(this.modal);
+
+                // Bind modal events
+                document.getElementById('fullscreen-card-close').addEventListener('click', () => this.closeModal());
+                
+                // Close on backdrop click
+                this.modal.addEventListener('click', (e) => {
+                    if (e.target === this.modal) {
+                        this.closeModal();
+                    }
+                });
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.modal.classList.contains('active')) {
+                        this.closeModal();
+                    }
+                });
+            }
+
+            bindEvents() {
+                // Add click listeners to all content cards
+                document.querySelectorAll('.card-3d').forEach(card => {
+                    card.classList.add('card-clickable');
+                    card.addEventListener('click', (e) => {
+                        // Prevent opening if clicking on interactive elements
+                        if (e.target.closest('button, a, input, textarea')) {
+                            return;
+                        }
+                        this.openCard(card);
+                    });
+                });
+            }
+
+            openCard(cardElement) {
+                // Extract card data
+                const title = cardElement.querySelector('h3')?.textContent || 'Card Details';
+                const content = cardElement.querySelector('p')?.textContent || 'No additional content available.';
+                const bgClasses = cardElement.className.match(/from-\w+-\d+|to-\w+-\d+/g) || [];
+                
+                // Set modal content
+                document.getElementById('fullscreen-card-title').textContent = title;
+                document.getElementById('fullscreen-card-subtitle').textContent = 'CCU Calvary Newsletter - Detailed View';
+                document.getElementById('fullscreen-card-content').textContent = content;
+                
+                // Set relevant icon based on content
+                const iconContainer = document.getElementById('fullscreen-card-icon');
+                const relevantIcon = this.getRelevantIcon(title, content);
+                iconContainer.innerHTML = `<img src="${relevantIcon.src}" alt="${relevantIcon.alt}" style="width: 40px; height: 40px; filter: invert(1);" />`;
+                
+                // Set gradient background for icon
+                if (bgClasses.length >= 2) {
+                    const gradientClass = bgClasses.join(' ');
+                    iconContainer.className = `fullscreen-card-icon bg-gradient-to-br ${gradientClass}`;
+                }
+                
+                // Set metadata
+                this.setMetadata(cardElement);
+                
+                // Show modal
+                this.modal.classList.add('active');
+            }
+
+            getRelevantIcon(title, content) {
+                const titleLower = title.toLowerCase();
+                const contentLower = content.toLowerCase();
+                
+                // Icon mapping based on content
+                if (titleLower.includes('accreditation') || contentLower.includes('accreditation')) {
+                    return { src: 'https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/award.svg', alt: 'Award' };
+                }
+                
+                if (titleLower.includes('medication') || titleLower.includes('error') || contentLower.includes('medication')) {
+                    return { src: 'https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/pill.svg', alt: 'Medication' };
+                }
+                
+                if (titleLower.includes('insulin') || contentLower.includes('insulin')) {
+                    return { src: 'https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/syringe.svg', alt: 'Insulin' };
+                }
+                
+                if (titleLower.includes('room') || contentLower.includes('room')) {
+                    return { src: 'https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/door-open.svg', alt: 'Room' };
+                }
+                
+                if (titleLower.includes('feedback') || contentLower.includes('satisfaction')) {
+                    return { src: 'https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/thumbs-up.svg', alt: 'Feedback' };
+                }
+                
+                if (titleLower.includes('education') || titleLower.includes('learning') || contentLower.includes('education')) {
+                    return { src: 'https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/graduation-cap.svg', alt: 'Education' };
+                }
+                
+                if (titleLower.includes('wellness') || titleLower.includes('staff') || contentLower.includes('wellness')) {
+                    return { src: 'https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/heart.svg', alt: 'Wellness' };
+                }
+                
+                if (titleLower.includes('met') || titleLower.includes('call')) {
+                    return { src: 'https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/phone-call.svg', alt: 'Emergency Call' };
+                }
+                
+                if (titleLower.includes('audit') || titleLower.includes('score')) {
+                    return { src: 'https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/clipboard-check.svg', alt: 'Audit' };
+                }
+                
+                if (titleLower.includes('alert') || titleLower.includes('notification')) {
+                    return { src: 'https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/bell.svg', alt: 'Alert' };
+                }
+                
+                if (titleLower.includes('risk') || titleLower.includes('management')) {
+                    return { src: 'https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/shield-alert.svg', alt: 'Risk Management' };
+                }
+                
+                // Default icon
+                return { src: 'https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/info.svg', alt: 'Information' };
+            }
+
+            setMetadata(cardElement) {
+                const metadataContainer = document.getElementById('fullscreen-card-metadata');
+                const currentDate = new Date().toLocaleDateString();
+                
+                // Determine category based on card content
+                let category = 'General Information';
+                let priority = 'Normal';
+                let status = 'Active';
+                
+                const title = cardElement.querySelector('h3')?.textContent.toLowerCase() || '';
+                
+                if (title.includes('medication') || title.includes('insulin')) {
+                    category = 'Medication Safety';
+                    priority = 'High';
+                } else if (title.includes('accreditation')) {
+                    category = 'Quality Assurance';
+                    priority = 'High';
+                    status = 'Completed';
+                } else if (title.includes('error')) {
+                    category = 'Safety Alert';
+                    priority = 'Critical';
+                } else if (title.includes('education') || title.includes('feedback')) {
+                    category = 'Staff Development';
+                } else if (title.includes('wellness')) {
+                    category = 'Staff Welfare';
+                }
+                
+                metadataContainer.innerHTML = `
+                    <div class="metadata-item">
+                        <div class="metadata-label">Category</div>
+                        <div class="metadata-value">${category}</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-label">Priority</div>
+                        <div class="metadata-value">${priority}</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-label">Status</div>
+                        <div class="metadata-value">${status}</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-label">Last Updated</div>
+                        <div class="metadata-value">${currentDate}</div>
+                    </div>
+                `;
+            }
+
+            closeModal() {
+                this.modal.classList.remove('active');
+            }
+        }
+
+        // --- Fullscreen Input System ---
+        class FullscreenInputSystem {
+            constructor() {
+                this.modal = null;
+                this.activeInput = null;
+                this.originalValue = '';
+                this.init();
+            }
+
+            init() {
+                this.createModal();
+                this.bindEvents();
+            }
+
+            createModal() {
+                this.modal = document.createElement('div');
+                this.modal.className = 'fullscreen-input-modal';
+                this.modal.innerHTML = `
+                    <div class="fullscreen-input-container">
+                        <div class="fullscreen-input-header">
+                            <h3 class="fullscreen-input-title">Enhanced Text Editor</h3>
+                            <button class="fullscreen-close-btn" id="fullscreen-close">
+                                <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/x.svg" alt="Close" style="width: 20px; height: 20px; filter: invert(1);" />
+                            </button>
+                        </div>
+                        <textarea class="fullscreen-input" id="fullscreen-textarea" placeholder="Start typing your enhanced text here..."></textarea>
+                        <div class="fullscreen-input-actions">
+                            <button class="fullscreen-action-btn fullscreen-cancel-btn" id="fullscreen-cancel">Cancel</button>
+                            <button class="fullscreen-action-btn fullscreen-save-btn" id="fullscreen-save">Save & Close</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(this.modal);
+
+                // Bind modal events
+                document.getElementById('fullscreen-close').addEventListener('click', () => this.closeModal());
+                document.getElementById('fullscreen-cancel').addEventListener('click', () => this.cancelEdit());
+                document.getElementById('fullscreen-save').addEventListener('click', () => this.saveAndClose());
+                
+                // Close on backdrop click
+                this.modal.addEventListener('click', (e) => {
+                    if (e.target === this.modal) {
+                        this.closeModal();
+                    }
+                });
+
+                // Keyboard shortcuts
+                document.getElementById('fullscreen-textarea').addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        this.closeModal();
+                    } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                        this.saveAndClose();
+                    }
+                });
+            }
+
+            bindEvents() {
+                // Bind to all textareas and text inputs
+                document.addEventListener('click', (e) => {
+                    if (e.target.matches('textarea') || (e.target.matches('input[type="text"]') && e.target.id !== 'user-name' && e.target.id !== 'modal-user-name')) {
+                        this.openModal(e.target);
+                    }
+                });
+            }
+
+            openModal(input) {
+                this.activeInput = input;
+                this.originalValue = input.value;
+                
+                const textarea = document.getElementById('fullscreen-textarea');
+                textarea.value = input.value;
+                textarea.placeholder = input.placeholder || 'Start typing your enhanced text here...';
+                
+                this.modal.classList.add('active');
+                setTimeout(() => textarea.focus(), 300);
+            }
+
+            closeModal() {
+                this.modal.classList.remove('active');
+                this.activeInput = null;
+                this.originalValue = '';
+            }
+
+            cancelEdit() {
+                if (this.activeInput) {
+                    this.activeInput.value = this.originalValue;
+                }
+                this.closeModal();
+            }
+
+            saveAndClose() {
+                if (this.activeInput) {
+                    const newValue = document.getElementById('fullscreen-textarea').value;
+                    this.activeInput.value = newValue;
+                    
+                    // Trigger input event to update any listeners
+                    this.activeInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                this.closeModal();
+            }
+        }
+
+        // --- Enhanced Animations ---
+        class AnimationController {
+            constructor() {
+                this.observeElements();
+                this.addInteractiveEffects();
+            }
+
+            observeElements() {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.style.animationPlayState = 'running';
+                            entry.target.classList.add('animate-in');
+                        }
+                    });
+                }, {
+                    threshold: 0.1
+                });
+
+                document.querySelectorAll('.card-3d').forEach(el => {
+                    observer.observe(el);
+                });
+            }
+
+            addInteractiveEffects() {
+                // Add parallax effect to cards
+                document.querySelectorAll('.card-3d').forEach(card => {
+                    card.addEventListener('mousemove', (e) => {
+                        const rect = card.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const y = e.clientY - rect.top;
+                        const centerX = rect.width / 2;
+                        const centerY = rect.height / 2;
+                        const rotateX = (y - centerY) / 10;
+                        const rotateY = (centerX - x) / 10;
+
+                        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(20px)`;
+                    });
+
+                    card.addEventListener('mouseleave', () => {
+                        card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateZ(0)';
+                    });
+                });
+
+                // Add ripple effect to interactive elements
+                document.querySelectorAll('.interactive-element').forEach(el => {
+                    el.addEventListener('click', this.createRipple);
+                });
+            }
+
+            createRipple(e) {
+                const button = e.currentTarget;
+                const ripple = document.createElement('span');
+                const rect = button.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size / 2;
+                const y = e.clientY - rect.top - size / 2;
+
+                ripple.style.cssText = `
+                    position: absolute;
+                    width: ${size}px;
+                    height: ${size}px;
+                    left: ${x}px;
+                    top: ${y}px;
+                    background: rgba(255, 255, 255, 0.3);
+                    border-radius: 50%;
+                    transform: scale(0);
+                    animation: ripple 0.6s ease-out;
+                    pointer-events: none;
+                `;
+
+                button.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            }
+        }
+
+        // Add ripple keyframes
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(2);
+                    opacity: 0;
+                }
+            }
+            
+            @keyframes animate-in {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            
+            .animate-in {
+                animation: animate-in 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            }
+        `;
+        document.head.appendChild(style);
+
         // --- Tab Switching Logic ---
         document.addEventListener('DOMContentLoaded', () => {
             const tabs = document.querySelectorAll('.tab-button');
@@ -1169,11 +2465,22 @@
                 });
             });
 
-            // Initialize comment system
+            // Initialize systems
             window.commentSystem = new CommentSystem();
+            window.darkModeToggle = new DarkModeToggle();
+            window.animationController = new AnimationController();
+            window.particleSystem = new ParticleSystem();
+            window.fullscreenInputSystem = new FullscreenInputSystem();
+            window.fullscreenCardSystem = new FullscreenCardSystem();
 
             // Show the initial tab
             showTab('main');
+
+            // Add loading animation
+            document.body.classList.add('loading-pulse');
+            setTimeout(() => {
+                document.body.classList.remove('loading-pulse');
+            }, 1000);
         });
 
     </script>
