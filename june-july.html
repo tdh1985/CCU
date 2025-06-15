@@ -891,10 +891,77 @@
             [data-theme="dark"] .dark-mode-toggle::before {
                 transform: translateY(-50%) translateX(22px);
             }
+        }        .dark-mode-toggle:hover {
+            box-shadow: 0 8px 20px var(--shadow-color);
+            transform: scale(1.05);
         }
 
-        .dark-mode-toggle:hover {
-            box-shadow: 0 8px 20px var(--shadow-color);
+        /* Dark mode toggle in header */
+        .dark-mode-toggle-header {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 10;
+            width: 60px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .dark-mode-toggle-header {
+                top: 10px;
+                right: 10px;
+                width: 50px;
+                height: 25px;
+            }
+        }
+
+        .dark-mode-toggle-header::before {
+            content: '☀️';
+            position: absolute;
+            top: 50%;
+            left: 6px;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        [data-theme="dark"] .dark-mode-toggle-header::before {
+            content: '🌙';
+            transform: translateY(-50%) translateX(26px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .dark-mode-toggle-header::before {
+                width: 15px;
+                height: 15px;
+                font-size: 8px;
+                left: 4px;
+            }
+            
+            [data-theme="dark"] .dark-mode-toggle-header::before {
+                transform: translateY(-50%) translateX(22px);
+            }
+        }
+
+        .dark-mode-toggle-header:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
             transform: scale(1.05);
         }
 
@@ -956,16 +1023,13 @@
         }
     </style>
 </head>
-<body class="bg-gray-50" data-theme="light">
-    
-    <!-- Dark Mode Toggle -->
-    <div class="dark-mode-toggle" id="darkModeToggle" title="Toggle Dark Mode"></div>
-    
+<body class="bg-gray-50" data-theme="light">    
     <!-- Particle System -->
-    <div class="particles" id="particles"></div>
-
-    <div class="max-w-6xl mx-auto p-3 sm:p-4 font-sans">
-        <div class="glass-morphism bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white p-4 md:p-6 rounded-3xl text-center mb-4 md:mb-6 card-3d interactive-element">
+    <div class="particles" id="particles"></div>    <div class="max-w-6xl mx-auto p-3 sm:p-4 font-sans">
+        <div class="glass-morphism bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white p-4 md:p-6 rounded-3xl text-center mb-4 md:mb-6 card-3d interactive-element relative">
+            <!-- Dark Mode Toggle -->
+            <div class="dark-mode-toggle-header" id="darkModeToggle" title="Toggle Dark Mode"></div>
+            
             <div class="flex items-center justify-center gap-4 mb-4">
                 <svg class="calvarylogo" width="137" height="40" viewBox="0 0 137 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <g>
@@ -1031,16 +1095,20 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
-                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-4 md:p-6 rounded-2xl shadow-lg text-white transform transition-all hover:scale-105 hover:shadow-xl relative overflow-hidden">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">                    <div class="glass-morphism bg-gradient-to-br from-blue-500 to-blue-600 p-4 md:p-6 rounded-3xl text-white card-3d interactive-element relative overflow-hidden">
                         <div class="absolute right-4 bottom-4 md:right-5 md:bottom-5 opacity-20">
-                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/calendar.svg" alt="Schedule" class="icon-lg"
+                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/syringe.svg" alt="Insulin Pen" class="icon-lg"
                                 onerror="this.onerror=null; this.src='https://placehold.co/70x70/cccccc/ffffff?text=Error';"
                             />
                         </div>
                         <div class="flex items-center gap-3 mb-3">
-                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/clock.svg" alt="Time" class="icon"/>
+                            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/pill.svg" alt="Medication" class="icon"/>
                             <h3 class="text-lg sm:text-xl font-bold">Insulin Pens</h3>
+                        </div>
+                        <div class="mb-4">
+                            <img src="en3190797.jpg" alt="Insulin Pen Information" class="w-full h-48 object-contain rounded-lg border-2 border-white border-opacity-20" 
+                                onerror="this.onerror=null; this.src='https://placehold.co/400x192/4f46e5/ffffff?text=Insulin+Pen+Image';"
+                            />
                         </div>
                         <p class="relative z-10 text-sm md:text-base">The sliding scale forms have now been updated. Please ensure you are using the latest version. The insulin pens (as oppose to the standard vial where we would withdraw the amount needed) are single patient use devices and must not be shared between patients. It will follow the patient for their hospital journey.</p>
                     </div>
@@ -1938,12 +2006,13 @@
                 this.darkMode = localStorage.getItem('darkMode') === 'true';
                 this.toggle = document.getElementById('darkModeToggle');
                 this.init();
-            }
-
-            init() {
+            }            init() {
                 this.updateTheme();
                 if (this.toggle) {
-                    this.toggle.addEventListener('click', () => this.toggleDarkMode());
+                    this.toggle.addEventListener('click', (e) => {
+                        e.stopPropagation(); // Prevent event bubbling to parent elements
+                        this.toggleDarkMode();
+                    });
                 }
             }
 
